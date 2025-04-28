@@ -1,5 +1,6 @@
 import json
 from skill_tests.skill_test import SkillTest
+from prompts.skill_prompts import SYSTEM_GENERATE_SKILL_TESTS_PROMPT
 
 def generate_skill_tests(remote_model, skills: list[str], tests_per_skill: int = 1) -> list[SkillTest]:
     """
@@ -9,12 +10,9 @@ def generate_skill_tests(remote_model, skills: list[str], tests_per_skill: int =
     """
     generated_tests: list[SkillTest] = []
     for skill in skills:
-        prompt = (
-            f"Create {tests_per_skill} distinct tasks to test a model's {skill} ability. "
-            f"For each task, provide a context (if needed), a question/instruction, and the correct answer. "
-            f"Respond in JSON format as a list of objects with keys 'context', 'question', 'answer'."
-        )
-        messages = [{"role": "user", "content": prompt}]
+        messages = [{"role": "user",
+                     "content": SYSTEM_GENERATE_SKILL_TESTS_PROMPT.format(tests_per_skill=tests_per_skill, skill=skill)}]
+
         response = remote_model.generate_response(messages)
         # Try to parse the response as JSON
         try:

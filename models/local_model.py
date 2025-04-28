@@ -1,8 +1,8 @@
 import logging
 from typing import List, Dict, Any, Tuple
-# Assuming OpenAIClient and OllamaClient are available from provided clients
 from clients.openai import OpenAIClient
 from clients.ollama import OllamaClient
+from prompts.skill_prompts import SYSTEM_TEST_LOCAL_MODEL_SKILL, USER_LOCAL_SKILL_CONTEXT_PROMPT, USER_LOCAL_SKILL_NO_CONTEXT_PROMPT
 from skill_tests.skill_test import SkillTest
 
 class LocalModel:
@@ -38,6 +38,7 @@ class LocalModel:
         except Exception as e:
             self.logger.error(f"Local model '{self.name}' API call failed: {e}")
             return ""
+
         # Both OpenAIClient.chat and OllamaClient.chat return a tuple; first element is list of outputs.
         outputs = result[0] if isinstance(result, tuple) else result
         if isinstance(outputs, list) and outputs:
@@ -50,13 +51,27 @@ class LocalModel:
     def run_test(self, test: SkillTest) -> str:
         """
         Given a SkillTest (with context and question), run the local model to produce an answer.
-        Constructs the prompt in a straightforward way (context + question as user message).
+        Constructs the prompt using system and user messages for better model guidance.
         """
-        prompt = ""
+        # System message defines the AI assistant's role and guidelines
+        system_message = {
+            "role": "system",
+            "content": SYSTEM_TEST_LOCAL_MODEL_SKILL
+        }
+
+        # User message contains the actual question and context
         if test.context:
-            prompt += f"{test.context}\n"
-        prompt += f"Q: {test.question}\nA:"  # Format context and question for the prompt
-        messages = [{"role": "user", "content": prompt}]
+            question_content = USER_LOCAL_SKILL_CONTEXT_PROMPT.format(question=test.question,
+                                                                      context=test.context)
+        else:
+            question_content = USER_LOCAL_SKILL_NO_CONTEXT_PROMPT.format(question=test.question)
+
+        user_message = {
+            "role": "user",
+            "content": question_content
+        }
+
+        messages = [system_message, user_message]
         answer = self.generate_response(messages)
         return answer.strip()
 

@@ -1,6 +1,5 @@
 import logging
 from typing import Optional, List, Dict, Any, Tuple
-# Assuming OpenAIClient is available from provided minions/clients code
 from clients.openai import OpenAIClient
 
 class RemoteModel:
